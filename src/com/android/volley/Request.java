@@ -123,6 +123,8 @@ public abstract class Request<T> implements Comparable<Request<T>>
 	/** {@link Priority} for this request     */
 	private Priority mPriority;
 
+	private boolean mDeliverOnUIThread = true;
+	
 	/**
 	 * Creates a new request with the given method (one of the values from {@link Method}),
 	 * URL, and error listener.  Note that the normal response listener is not provided here as
@@ -465,6 +467,11 @@ public abstract class Request<T> implements Comparable<Request<T>>
 		{
 			for (Map.Entry<String, String> entry : params.entrySet())
 			{
+				if(entry.getKey() == null || entry.getValue() == null)
+				{
+					continue;
+				}
+				
 				if(encodedParams.length() > 0)
 				{
 					encodedParams.append('&');
@@ -484,7 +491,6 @@ public abstract class Request<T> implements Comparable<Request<T>>
 
 	public String getEncodedUrlBody() throws AuthFailureError
 	{
-
 		StringBuilder encodedParams = new StringBuilder();
 		String paramsEncoding = getParamsEncoding();
 		Map<String, String> params = getParams();
@@ -492,6 +498,11 @@ public abstract class Request<T> implements Comparable<Request<T>>
 		{
 			for (Map.Entry<String, String> entry : params.entrySet())
 			{
+				if(entry.getKey() == null || entry.getValue() == null)
+				{
+					continue;
+				}
+				
 				encodedParams.append(URLEncoder.encode(entry.getKey(), paramsEncoding));
 				encodedParams.append('=');
 				encodedParams.append(URLEncoder.encode(entry.getValue(), paramsEncoding));
@@ -528,6 +539,20 @@ public abstract class Request<T> implements Comparable<Request<T>>
 //		}
 //		return false;
 		return mShouldCache;
+	}
+	
+	public final Request<?> setDeliverOnUIThread(boolean DeliverOnUIThread)
+	{
+		mDeliverOnUIThread = DeliverOnUIThread;
+		return this;
+	}
+
+	/**
+	 * Returns true if deliver responses on ui thread.
+	 */
+	public final boolean deliverOnUIThread()
+	{
+		return mDeliverOnUIThread;
 	}
 
 	/**

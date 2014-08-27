@@ -40,15 +40,21 @@ public class ExecutorDelivery implements ResponseDelivery {
             	/******before modified start******/
 //                handler.post(command);
             	/******before modified end******/
-            	if(handler != null)
+            	
+            	if(command instanceof ResponseDeliveryRunnable)
             	{
-            		handler.post(command);
+            		ResponseDeliveryRunnable responseDeliveryRunnable = (ResponseDeliveryRunnable)command;
+            		if(handler != null && responseDeliveryRunnable.getRequest() != null && responseDeliveryRunnable.getRequest().deliverOnUIThread())
+            		{
+            			handler.post(command);
+            			return;
+            		}
             	}
-            	else
-            	{
-            		//care method postResponse's third param Runnable
-            		command.run();
-            	}
+            	
+            	if(command != null)
+				{
+					command.run();
+				}
             	/****************modified by zhangxiaolong end*****************/
             }
         };
@@ -64,7 +70,7 @@ public class ExecutorDelivery implements ResponseDelivery {
     }
     
     public ExecutorDelivery() {
-    	final Executor executor = new Executor()
+    	mResponsePoster = new Executor()
 		{
 			@Override
 			public void execute(Runnable command)
@@ -75,7 +81,6 @@ public class ExecutorDelivery implements ResponseDelivery {
 				}
 			}
 		};
-        mResponsePoster = executor;
     }
 
     @Override
@@ -142,5 +147,10 @@ public class ExecutorDelivery implements ResponseDelivery {
                 mRunnable.run();
             }
        }
+        
+        public Request getRequest()
+        {
+        	return mRequest;
+        }
     }
 }
