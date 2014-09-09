@@ -43,8 +43,7 @@ public final class FilePart extends BasePart {
         }
         
         this.file                    = file;
-//        final String partName        = UrlEncodingHelper.encode(name, HTTP.DEFAULT_PROTOCOL_CHARSET);
-        final String partName        = "file";
+        final String partName        = UrlEncodingHelper.encode(name, HTTP.DEFAULT_PROTOCOL_CHARSET);
         final String partFilename    = UrlEncodingHelper.encode(
             (filename == null) ? file.getName() : filename,
             HTTP.DEFAULT_PROTOCOL_CHARSET

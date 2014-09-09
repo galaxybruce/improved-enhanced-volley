@@ -30,6 +30,7 @@ import com.android.volley.VolleyLog.MarkerLog;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -398,6 +399,26 @@ public abstract class Request<T> implements Comparable<Request<T>>
 	public void setParams(Map<String, String> params)
 	{
 		mParams = params;
+	}
+	
+	public void addParams(String key, String value)
+	{
+		if(mParams == null)
+		{
+			mParams = new HashMap<String, String>();
+		}
+		
+		mParams.put(key, value);
+	}
+	
+	public void addParams(Map<String, String> params)
+	{
+		if(mParams == null)
+		{
+			mParams = new HashMap<String, String>();
+		}
+		
+		mParams.putAll(params);
 	}
 
 	/**

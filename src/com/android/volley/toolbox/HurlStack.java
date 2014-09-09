@@ -233,7 +233,7 @@ public class HurlStack implements HttpStack {
                         .append(CRLF)
                         .append(String.format(HEADER_CONTENT_DISPOSITION
                                 + COLON_SPACE + FORM_DATA + SEMICOLON_SPACE
-                                + FILENAME, "file", file.getName()))
+                                + FILENAME, multiPartRequest.getFileKey(), file.getName()))
                         .append(CRLF)
                         .append(HEADER_CONTENT_TYPE + COLON_SPACE
                                 + CONTENT_TYPE_OCTET_STREAM)

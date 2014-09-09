@@ -53,6 +53,8 @@ public abstract class MultiPartRequest<T> extends Request<T> {
      */
     private Map<String, String>         mFileUploads     = null;
     
+    private String fileKey = null;
+    
     /**
      * Default connection timeout for Multipart requests
      */
@@ -159,4 +161,13 @@ public abstract class MultiPartRequest<T> extends Request<T> {
         return PROTOCOL_CHARSET;
     }
     
+    public String getFileKey()
+    {
+    	return fileKey == null ? "file" : fileKey;
+    }
+    
+    public void setFileKey(String fileKey)
+    {
+    	this.fileKey = fileKey;
+    }
 }

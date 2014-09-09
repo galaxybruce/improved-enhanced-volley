@@ -20,6 +20,7 @@ import android.os.SystemClock;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Cache;
+import com.android.volley.CommonFailError;
 import com.android.volley.Network;
 import com.android.volley.NetworkError;
 import com.android.volley.NetworkResponse;
@@ -39,6 +40,8 @@ import org.apache.http.StatusLine;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.impl.cookie.DateUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -102,13 +105,22 @@ public class BasicNetwork implements Network {
                             responseHeaders, true);
                 }
 
-                // Some responses such as 204s do not have content.  We must check.
-                if (httpResponse.getEntity() != null) {
-                  responseContents = entityToBytes(httpResponse.getEntity());
-                } else {
-                  // Add 0 byte response as a way of honestly representing a
-                  // no-content request.
-                  responseContents = new byte[0];
+                if (request instanceof DownloadFileRequest) {
+                	 if (httpResponse.getEntity() != null) {
+                		 responseContents = entityToFile(httpResponse.getEntity(), (DownloadFileRequest<?>)request);
+                     } else {
+                    	 throw new ServerError();
+                     }
+                }
+                else {
+                	 // Some responses such as 204s do not have content.  We must check.
+                    if (httpResponse.getEntity() != null) {
+                    	responseContents = entityToBytes(httpResponse.getEntity());
+                    } else {
+                    	// Add 0 byte response as a way of honestly representing a
+                    	// no-content request.
+                    	responseContents = new byte[0];
+                    }
                 }
 
                 // if the request is slow, log it.
@@ -233,6 +245,68 @@ public class BasicNetwork implements Network {
             }
             mPool.returnBuf(buffer);
             bytes.close();
+        }
+    }
+    
+    private byte[] entityToFile(HttpEntity entity, DownloadFileRequest<?> request) throws IOException, ServerError, CommonFailError{
+    	long readCount = 0;
+    	long fileLength = 0;
+    	File file = null;
+    	FileOutputStream fos = null;
+    	
+        try {
+            InputStream in = entity.getContent();
+            if (in == null) {
+                throw new ServerError();
+            }
+            
+            fileLength = entity.getContentLength();
+        	file = request.createFile(request.getUrl(), fileLength);
+            fos = new FileOutputStream(file);
+            byte[] buffer = new byte[1024];
+			int buffLen = -1;
+			while((buffLen = in.read(buffer)) != -1)
+			{
+				if(request.isCanceled() && file != null && file.exists())
+				{
+					file.delete();
+					break;
+				}
+				readCount += buffLen;
+				fos.write(buffer, 0, buffLen);
+				request.transferred(readCount, fileLength);
+			}
+			
+            return file.getAbsolutePath().getBytes();
+        } finally {
+            try {
+            	if(fos != null)
+            	{
+            		fos.flush();
+        			fos.close();
+            	}
+                // Close the InputStream and release the resources by "consuming the content".
+                entity.consumeContent();
+                if(readCount != 0 && readCount == fileLength)
+                {
+                	request.successDownloadCallback(request.getUrl(), file != null ? file.getAbsolutePath() : null);
+                }
+                else
+                {
+                	request.failDownloadCallback(request.getUrl(), file != null ? file.getAbsolutePath() : null);
+                }
+            } catch (IOException e) {
+                // This can happen if there was an exception above that left the entity in
+                // an invalid state.
+                VolleyLog.v("Error occured when calling consumingContent");
+            }
+            finally
+            {
+            	if((request.isCanceled() || readCount != fileLength) && file != null && file.exists())
+				{
+					file.delete();
+				}
+            }
         }
     }
 
