@@ -229,11 +229,13 @@ public class HurlStack implements HttpStack {
                     throw new IOException(String.format("File is a directory: %s", file.getAbsolutePath()));
                 }
 
+ 		String fileKey = UrlEncodingHelper.encode(multiPartRequest.getFileKey(), request.getParamsEncoding());
+                String fileName = UrlEncodingHelper.encode(file.getName(), request.getParamsEncoding());
                 writer.append(boundary)
                         .append(CRLF)
                         .append(String.format(HEADER_CONTENT_DISPOSITION
                                 + COLON_SPACE + FORM_DATA + SEMICOLON_SPACE
-                                + FILENAME, multiPartRequest.getFileKey(), file.getName()))
+                                + FILENAME, fileKey, fileName))
                         .append(CRLF)
                         .append(HEADER_CONTENT_TYPE + COLON_SPACE
                                 + CONTENT_TYPE_OCTET_STREAM)
